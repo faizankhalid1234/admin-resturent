@@ -14,6 +14,10 @@ const COUNTED_STATUSES = new Set([
   ORDER_STATUS.PAID,
 ]);
 
+function normalizeStatus(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
 function OrderStatsBar() {
   const [orders, setOrders] = useState([]);
 
@@ -23,15 +27,16 @@ function OrderStatsBar() {
   }, []);
 
   const countedOrders = useMemo(
-    () => orders.filter((o) => COUNTED_STATUSES.has(o.status)),
+    () => orders.filter((o) => COUNTED_STATUSES.has(normalizeStatus(o.status))),
     [orders]
   );
 
   const totalValue = countedOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
   const paidValue = orders
-    .filter((o) => o.status === ORDER_STATUS.PAID)
+    .filter((o) => normalizeStatus(o.status) === ORDER_STATUS.PAID)
     .reduce((sum, o) => sum + (Number(o.total) || 0), 0);
-  const rejectedCount = orders.filter((o) => o.status === ORDER_STATUS.REJECTED).length;
+  const rejectedCount = orders.filter((o) => normalizeStatus(o.status) === ORDER_STATUS.REJECTED).length;
+  const pendingCount = orders.filter((o) => normalizeStatus(o.status) === ORDER_STATUS.PENDING).length;
 
   return (
     <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -42,7 +47,7 @@ function OrderStatsBar() {
         </div>
         <p className="mt-2 text-[22px] font-bold leading-tight">{formatSAR(totalValue)}</p>
         <p className="mt-0.5 text-[11px] text-white/80">
-          {countedOrders.length} approved / processing
+          {countedOrders.length} approved / processing / paid
         </p>
       </div>
 
@@ -69,9 +74,7 @@ function OrderStatsBar() {
           <IoReceiptOutline className="h-5 w-5 text-amber-600" />
           <span className="text-[11px] font-semibold uppercase tracking-wide">Pending</span>
         </div>
-        <p className="mt-2 text-[22px] font-bold text-amber-600">
-          {orders.filter((o) => o.status === ORDER_STATUS.PENDING).length}
-        </p>
+        <p className="mt-2 text-[22px] font-bold text-amber-600">{pendingCount}</p>
         <p className="mt-0.5 text-[11px] text-gray-muted">Awaiting approval</p>
       </div>
     </div>
